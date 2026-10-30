@@ -345,7 +345,15 @@ el.giveupBtn.addEventListener("click", async () => {
     ok: "Да, покажи",
     cancel: "Попробую ещё",
   });
-  if (yes) {
+  if (!yes) return;
+  const sure = await ask({
+    icon: "i-heart",
+    title: "Прям точно-точно?",
+    text: "Без подсказок будет куда приятнее найти подарок самой. Последний шанс передумать!",
+    ok: "Точно-точно, покажи",
+    cancel: "Ладно, подумаю ещё",
+  });
+  if (sure) {
     el.foundEyebrow.textContent = "Ничего страшного!";
     solve(true);
   }
