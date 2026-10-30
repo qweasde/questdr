@@ -61,7 +61,9 @@ const screens = {
 };
 
 const el = {
-  start: $("#btn-start"),
+  slider: $("#slider"),
+  sliderKnob: $("#slider-knob"),
+  sliderFill: $("#slider-fill"),
   startLabel: $("#btn-start-label"),
   resetIntro: $("#btn-reset-intro"),
   resetFinal: $("#btn-reset-final"),
@@ -165,7 +167,9 @@ function renderFinal() {
 function render() {
   if (!state.started) {
     const inProgress = state.step > 0 || state.solved;
-    el.startLabel.textContent = inProgress ? "Продолжить квест" : "Начать квест";
+    el.startLabel.textContent = inProgress ? "проведи, чтобы продолжить" : "проведи, чтобы начать";
+    el.sliderKnob.setAttribute("aria-label", inProgress ? "Продолжить квест" : "Начать квест");
+    setSlider(0);
     el.resetIntro.hidden = !inProgress;
     show("intro");
   } else if (state.step >= RIDDLES.length) {
@@ -182,7 +186,63 @@ function render() {
 }
 
 /* ---------- Обработчики ---------- */
-el.start.addEventListener("click", () => { state.started = true; save(); render(); });
+/* ---------- Слайдер «проведи, чтобы начать» ---------- */
+let drag = null;
+
+function sliderMax() {
+  const pad = parseFloat(getComputedStyle(el.slider).getPropertyValue("--pad")) || 0;
+  return el.slider.clientWidth - el.sliderKnob.offsetWidth - pad * 2;
+}
+
+function setSlider(x) {
+  if (x === 0) {
+    el.sliderKnob.style.transform = el.sliderFill.style.width = el.startLabel.style.opacity = "";
+    return;
+  }
+  const max = sliderMax();
+  el.sliderKnob.style.transform = `translateX(${x}px)`;
+  el.sliderFill.style.width = `${x + el.sliderKnob.offsetWidth + 12}px`;
+  el.startLabel.style.opacity = max > 0 ? String(Math.max(0, 1 - (x / max) * 1.8)) : "1";
+}
+
+function startQuest() {
+  vibrate([20, 30, 40]);
+  state.started = true;
+  save();
+  render();
+}
+
+el.sliderKnob.addEventListener("pointerdown", (e) => {
+  el.slider.classList.remove("is-returning");
+  el.sliderKnob.setPointerCapture(e.pointerId);
+  drag = { startX: e.clientX, max: sliderMax(), x: 0 };
+});
+
+el.sliderKnob.addEventListener("pointermove", (e) => {
+  if (!drag) return;
+  drag.x = Math.min(Math.max(e.clientX - drag.startX, 0), drag.max);
+  setSlider(drag.x);
+});
+
+function endDrag() {
+  if (!drag) return;
+  const done = drag.x >= drag.max * 0.9;
+  drag = null;
+  if (done) {
+    setSlider(sliderMax());
+    setTimeout(startQuest, 120);
+  } else {
+    el.slider.classList.add("is-returning");
+    setSlider(0);
+  }
+}
+el.sliderKnob.addEventListener("pointerup", endDrag);
+el.sliderKnob.addEventListener("pointercancel", endDrag);
+
+// клавиатура и скринридеры: Enter / пробел запускают квест
+el.sliderKnob.addEventListener("click", (e) => {
+  if (e.detail === 0) startQuest();
+});
 
 el.resetIntro.addEventListener("click", () => {
   if (confirm("Сбросить прогресс и начать квест с начала?")) reset();

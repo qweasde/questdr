@@ -41,10 +41,13 @@
         <li><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-heart"/></svg>Нашла подарок&nbsp;— жми «дальше»</li>
       </ul>
       <div class="actions">
-        <button class="btn btn-primary" id="btn-start" type="button">
-          <span id="btn-start-label">Начать квест</span>
-          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"/></svg>
-        </button>
+        <div class="slider" id="slider">
+          <span class="slider-fill" id="slider-fill" aria-hidden="true"></span>
+          <span class="slider-text" id="btn-start-label">проведи, чтобы начать</span>
+          <button class="slider-knob" id="slider-knob" type="button" aria-label="Начать квест">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"/></svg>
+          </button>
+        </div>
         <button class="btn-link" id="btn-reset-intro" type="button" hidden>Начать заново</button>
       </div>
     </section>
