@@ -89,6 +89,12 @@ const el = {
 };
 
 /* ---------- Состояние ---------- */
+// ссылка вида ...?reset сбрасывает прогресс
+if (new URLSearchParams(location.search).has("reset")) {
+  try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+  history.replaceState(null, "", location.pathname);
+}
+
 // step: индекс текущей загадки; solved: отгадана ли текущая (ждём «нашла»)
 let state = load() || { step: 0, solved: false, started: false };
 let wrongCount = 0;
