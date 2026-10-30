@@ -485,6 +485,53 @@ button { cursor: pointer; touch-action: manipulation; }
 }
 .found-list .icon { margin-left: auto; color: var(--c-primary); }
 
+/* ===== Модалка ===== */
+.modal {
+  width: min(calc(100% - 40px), 360px);
+  margin: auto;
+  padding: 32px 24px 24px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  background: linear-gradient(180deg, #FFFFFF 0%, var(--c-surface-soft) 100%);
+  color: var(--c-text);
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(131, 24, 67, .3);
+}
+.modal[open] { animation: modal-in 280ms var(--ease-spring) both; }
+.modal::backdrop {
+  background: rgba(80, 7, 36, .45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.modal[open]::backdrop { animation: backdrop-in 200ms ease-out both; }
+.modal.is-closing { animation: modal-out 160ms ease-in both; }
+.modal.is-closing::backdrop { animation: backdrop-out 160ms ease-in both; }
+
+@keyframes modal-in { from { opacity: 0; transform: scale(.88) translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes modal-out { to { opacity: 0; transform: scale(.94); } }
+@keyframes backdrop-in { from { opacity: 0; } }
+@keyframes backdrop-out { to { opacity: 0; } }
+
+.modal-icon {
+  width: 64px; height: 64px;
+  display: grid; place-items: center;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  color: #fff;
+  background: linear-gradient(145deg, var(--c-accent), var(--c-primary-strong));
+  box-shadow: var(--shadow-btn);
+}
+.modal-icon .icon { width: 30px; height: 30px; }
+.modal-title {
+  margin: 0 0 8px;
+  font-family: var(--font-head);
+  font-size: 22px;
+  line-height: 1.25;
+}
+.modal-text { margin: 0 0 24px; color: var(--c-text-muted); }
+.modal-actions { display: grid; gap: 10px; }
+.modal-actions .btn-ghost { width: 100%; min-height: 52px; }
+
 /* ===== Доступность: меньше движения ===== */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

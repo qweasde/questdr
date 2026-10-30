@@ -250,12 +250,54 @@ el.sliderKnob.addEventListener("click", (e) => {
   if (e.detail === 0) startQuest();
 });
 
-el.resetIntro.addEventListener("click", () => {
-  if (confirm("Сбросить прогресс и начать квест с начала?")) reset();
-});
-el.resetFinal.addEventListener("click", () => {
-  if (confirm("Пройти квест заново?")) reset();
-});
+/* ---------- Модалка подтверждения ---------- */
+const modal = {
+  root: $("#modal"),
+  icon: $("#modal-icon"),
+  title: $("#modal-title"),
+  text: $("#modal-text"),
+  ok: $("#modal-ok"),
+  cancel: $("#modal-cancel"),
+};
+
+function ask({ icon, title, text, ok, cancel = "Отмена" }) {
+  modal.icon.innerHTML = placeSvg(icon);
+  modal.title.textContent = title;
+  modal.text.textContent = text;
+  modal.ok.textContent = ok;
+  modal.cancel.textContent = cancel;
+  modal.root.classList.remove("is-closing");
+  modal.root.showModal();
+  modal.cancel.focus();
+
+  return new Promise((resolve) => {
+    const finish = (result) => {
+      modal.ok.onclick = modal.cancel.onclick = modal.root.oncancel = modal.root.onclick = null;
+      modal.root.classList.add("is-closing");
+      setTimeout(() => { modal.root.close(); modal.root.classList.remove("is-closing"); resolve(result); }, reduceMotion ? 0 : 160);
+    };
+    modal.ok.onclick = () => finish(true);
+    modal.cancel.onclick = () => finish(false);
+    modal.root.oncancel = (e) => { e.preventDefault(); finish(false); }; // Esc / «назад»
+    modal.root.onclick = (e) => { // тап по фону за карточкой
+      const r = modal.root.getBoundingClientRect();
+      const outside = e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+      if (e.target === modal.root && outside) finish(false);
+    };
+  });
+}
+
+async function confirmReset() {
+  const yes = await ask({
+    icon: "i-refresh",
+    title: "Начать заново?",
+    text: "Прогресс сбросится, и квест начнётся с первой загадки.",
+    ok: "Да, сначала",
+  });
+  if (yes) reset();
+}
+el.resetIntro.addEventListener("click", confirmReset);
+el.resetFinal.addEventListener("click", confirmReset);
 
 el.form.addEventListener("submit", (e) => {
   e.preventDefault();
@@ -295,8 +337,15 @@ el.hintBtn.addEventListener("click", () => {
   el.giveupBtn.hidden = false;
 });
 
-el.giveupBtn.addEventListener("click", () => {
-  if (confirm("Точно показать ответ?")) {
+el.giveupBtn.addEventListener("click", async () => {
+  const yes = await ask({
+    icon: "i-eye",
+    title: "Показать ответ?",
+    text: "Может, ещё разок перечитать загадку? Ты почти у цели!",
+    ok: "Да, покажи",
+    cancel: "Попробую ещё",
+  });
+  if (yes) {
     el.foundEyebrow.textContent = "Ничего страшного!";
     solve(true);
   }
