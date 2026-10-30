@@ -53,6 +53,9 @@ body {
 }
 
 button, input { font: inherit; color: inherit; }
+
+/* заголовки получают фокус программно (для скринридеров) — рамка не нужна */
+[tabindex="-1"]:focus { outline: none; }
 button { cursor: pointer; touch-action: manipulation; }
 
 .icon {
