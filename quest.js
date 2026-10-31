@@ -298,6 +298,7 @@ async function confirmReset() {
 }
 el.resetIntro.addEventListener("click", confirmReset);
 el.resetFinal.addEventListener("click", confirmReset);
+$("#btn-reset-riddle").addEventListener("click", confirmReset);
 
 el.form.addEventListener("submit", (e) => {
   e.preventDefault();
