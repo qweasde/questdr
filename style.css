@@ -453,6 +453,127 @@ button { cursor: pointer; touch-action: manipulation; }
   color: transparent;
 }
 
+/* ===== Цифра кода на экране «найдено» ===== */
+.code-reward {
+  margin: 0 0 24px;
+  padding: 18px 16px 16px;
+  background: rgba(255,255,255,.85);
+  border: 1.5px dashed var(--c-accent);
+  border-radius: var(--r-md);
+  animation: screen-in 420ms 200ms var(--ease-out) both;
+}
+.code-reward[hidden] { display: none; }
+.code-reward-label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--c-primary-strong);
+}
+.code-reward-digit {
+  margin: 2px 0 10px;
+  font-family: var(--font-head);
+  font-size: 64px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--c-primary);
+  font-variant-numeric: tabular-nums;
+  animation: pop 600ms 350ms var(--ease-spring) both;
+}
+.code-slots {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+.code-slots li {
+  width: 44px; height: 52px;
+  display: grid; place-items: center;
+  font-family: var(--font-head);
+  font-size: 24px;
+  font-weight: 700;
+  border-radius: var(--r-sm);
+  border: 2px solid var(--c-border);
+  color: var(--c-border);
+  background: var(--c-surface);
+}
+.code-slots li.is-filled { color: var(--c-text); border-color: var(--c-accent); }
+.code-slots li.is-new { color: #fff; background: var(--c-primary); border-color: var(--c-primary); }
+.code-reward-note { margin: 0; font-size: 15px; font-weight: 600; color: var(--c-text-muted); }
+
+/* ===== Экран блокировки с кодом ===== */
+#screen-lock { justify-content: space-between; text-align: center; gap: 24px; }
+.lock-head { padding-top: 8px; }
+.lock-icon {
+  width: 64px; height: 64px;
+  display: grid; place-items: center;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  color: #fff;
+  background: linear-gradient(145deg, var(--c-accent), var(--c-primary-strong));
+  box-shadow: var(--shadow-btn);
+}
+.lock-icon .icon { width: 30px; height: 30px; }
+.lock-icon.is-open { animation: pop 500ms var(--ease-spring) both; background: linear-gradient(145deg, #F9A8D4, var(--c-primary)); }
+.lock-sub { margin: 0 0 20px; min-height: 26px; font-weight: 600; color: var(--c-text-muted); }
+.lock-sub.is-error { color: var(--c-error); }
+
+.pin-dots { display: flex; justify-content: center; gap: 18px; }
+.pin-dots span {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--c-primary);
+  transition: background-color 120ms, transform 160ms var(--ease-spring);
+}
+.pin-dots span.is-filled { background: var(--c-primary); transform: scale(1.1); }
+.pin-dots.is-error { animation: shake 380ms var(--ease-out); }
+.pin-dots.is-error span { border-color: var(--c-error); background: var(--c-error); }
+.pin-dots.is-success span { border-color: var(--c-success); background: var(--c-success); }
+
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 76px);
+  justify-content: center;
+  gap: 16px 28px;
+  padding-bottom: 8px;
+}
+.key {
+  width: 76px; height: 76px;
+  display: grid; place-items: center;
+  padding: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--c-border);
+  background: rgba(255,255,255,.75);
+  color: var(--c-text);
+  font-family: var(--font-head);
+  font-size: 30px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  box-shadow: var(--shadow-sm);
+  transition: background-color 120ms, transform 120ms var(--ease-out), color 120ms;
+}
+.key:active { background: var(--c-primary); color: #fff; transform: scale(.94); }
+.key:focus-visible { outline: 3px solid var(--c-ring); outline-offset: 3px; }
+.key-text {
+  border-color: transparent;
+  background: none;
+  box-shadow: none;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--c-primary-strong);
+}
+.key-text .icon { width: 28px; height: 28px; }
+
+@media (max-height: 700px) {
+  .keypad { grid-template-columns: repeat(3, 68px); gap: 12px 24px; }
+  .key { width: 68px; height: 68px; font-size: 26px; }
+  .lock-icon { width: 52px; height: 52px; margin-bottom: 8px; }
+}
+
 /* ===== Финал ===== */
 .hero-icon-heart .icon { fill: rgba(255,255,255,.25); }
 .found-list {

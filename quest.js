@@ -40,6 +40,9 @@ const RIDDLES = [
   },
 ];
 
+// Код от последней загадки: за каждую из первых 4 загадок выдаётся одна цифра по порядку
+const CODE = "1402";
+
 const WRONG_MESSAGES = [
   "Не то место. Перечитай загадку ещё разок.",
   "Мимо! Попробуй подумать иначе.",
@@ -57,6 +60,7 @@ const screens = {
   intro: $("#screen-intro"),
   riddle: $("#screen-riddle"),
   found: $("#screen-found"),
+  lock: $("#screen-lock"),
   final: $("#screen-final"),
 };
 
@@ -84,6 +88,16 @@ const el = {
   placeName: $("#place-name"),
   next: $("#btn-next"),
   nextLabel: $("#btn-next-label"),
+  codeReward: $("#code-reward"),
+  codeDigit: $("#code-digit"),
+  codeSlots: $("#code-slots"),
+  codeNote: $("#code-note"),
+  lockIcon: $("#lock-icon"),
+  lockMsg: $("#lock-msg"),
+  pinDots: $("#pin-dots"),
+  keypad: $("#keypad"),
+  forgot: $("#btn-forgot"),
+  backspace: $("#btn-backspace"),
   foundList: $("#found-list"),
   confettiBtn: $("#btn-confetti"),
 };
@@ -95,8 +109,9 @@ if (new URLSearchParams(location.search).has("reset")) {
   history.replaceState(null, "", location.pathname);
 }
 
-// step: индекс текущей загадки; solved: отгадана ли текущая (ждём «нашла»)
-let state = load() || { step: 0, solved: false, started: false };
+// step: индекс текущей загадки; solved: отгадана ли текущая (ждём «нашла»);
+// unlocked: введён ли код от последней загадки
+let state = load() || { step: 0, solved: false, started: false, unlocked: false };
 let wrongCount = 0;
 
 function load() {
@@ -106,7 +121,7 @@ function save() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch { /* приватный режим */ }
 }
 function reset() {
-  state = { step: 0, solved: false, started: false };
+  state = { step: 0, solved: false, started: false, unlocked: false };
   save();
   render();
 }
@@ -161,7 +176,66 @@ function renderFound() {
   el.foundTitle.innerHTML = `Подарок №${state.step + 1} ждёт тебя&nbsp;—`;
   el.placeIcon.innerHTML = placeSvg(r.icon);
   el.placeName.textContent = r.place;
-  el.nextLabel.textContent = isLast ? "Нашла! Завершить квест" : "Нашла! Следующая загадка";
+  const lastCodeStep = state.step === CODE.length - 1;
+  el.nextLabel.textContent = isLast ? "Нашла! Завершить квест"
+    : lastCodeStep ? "Нашла! К последней загадке"
+    : "Нашла! Следующая загадка";
+
+  el.codeReward.hidden = state.step >= CODE.length;
+  if (state.step < CODE.length) {
+    el.codeDigit.textContent = CODE[state.step];
+    el.codeSlots.innerHTML = [...CODE].map((d, i) => {
+      const cls = i === state.step ? "is-new" : i < state.step ? "is-filled" : "";
+      return `<li class="${cls}">${i <= state.step ? d : "•"}</li>`;
+    }).join("");
+    el.codeNote.innerHTML = lastCodeStep
+      ? "Код собран! Он откроет последнюю загадку."
+      : "Запомни её&nbsp;— пригодится в конце!";
+  }
+}
+
+/* ---------- Замок с кодом ---------- */
+let pin = "";
+
+function renderLock() {
+  pin = "";
+  el.lockIcon.classList.remove("is-open");
+  el.lockIcon.innerHTML = placeSvg("i-lock");
+  el.lockMsg.textContent = "Четыре цифры, которые ты собрала";
+  el.lockMsg.classList.remove("is-error");
+  renderPin();
+}
+
+function renderPin() {
+  el.pinDots.classList.remove("is-error", "is-success");
+  [...el.pinDots.children].forEach((dot, i) => dot.classList.toggle("is-filled", i < pin.length));
+}
+
+function pressKey(d) {
+  if (pin.length >= CODE.length) return;
+  vibrate(10);
+  pin += d;
+  el.lockMsg.classList.remove("is-error");
+  renderPin();
+  if (pin.length === CODE.length) setTimeout(checkPin, 150);
+}
+
+function checkPin() {
+  if (pin === CODE) {
+    vibrate([30, 40, 80]);
+    el.pinDots.classList.add("is-success");
+    el.lockIcon.innerHTML = placeSvg("i-unlock");
+    el.lockIcon.classList.add("is-open");
+    el.lockMsg.textContent = "Открыто!";
+    miniBurst();
+    setTimeout(() => { state.unlocked = true; save(); render(); }, 700);
+  } else {
+    vibrate(200);
+    el.pinDots.classList.add("is-error");
+    el.lockMsg.textContent = "Неверный код, попробуй ещё";
+    el.lockMsg.classList.add("is-error");
+    setTimeout(() => { pin = ""; renderPin(); }, 500);
+  }
 }
 
 function renderFinal() {
@@ -185,6 +259,9 @@ function render() {
   } else if (state.solved) {
     renderFound();
     show("found");
+  } else if (state.step === CODE.length && !state.unlocked) {
+    renderLock();
+    show("lock");
   } else {
     renderRiddle();
     show("riddle");
@@ -299,6 +376,30 @@ async function confirmReset() {
 el.resetIntro.addEventListener("click", confirmReset);
 el.resetFinal.addEventListener("click", confirmReset);
 $("#btn-reset-riddle").addEventListener("click", confirmReset);
+
+el.keypad.addEventListener("click", (e) => {
+  const key = e.target.closest("[data-key]");
+  if (key) pressKey(key.dataset.key);
+});
+el.backspace.addEventListener("click", () => {
+  pin = pin.slice(0, -1);
+  renderPin();
+});
+el.forgot.addEventListener("click", async () => {
+  await ask({
+    icon: "i-lock",
+    title: "Твои цифры",
+    text: `По порядку загадок: ${[...CODE].join("  ·  ")}`,
+    ok: "Запомнила!",
+    cancel: "Закрыть",
+  });
+});
+// ввод с физической клавиатуры
+document.addEventListener("keydown", (e) => {
+  if (!screens.lock.classList.contains("is-active") || modal.root.open) return;
+  if (/^\d$/.test(e.key)) pressKey(e.key);
+  else if (e.key === "Backspace") el.backspace.click();
+});
 
 el.form.addEventListener("submit", (e) => {
   e.preventDefault();
